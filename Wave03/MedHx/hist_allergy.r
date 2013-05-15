@@ -51,6 +51,6 @@ mhx = mhx[,c(1,zNamesRange(mhx, 'MedHxAllergyDrugs', 'MedHxAllergySkin'))]
 
 describe(mhx)
 
-#***********************rename dataframe so all the saved files don't have same name
+#*********************** rename dataframe so all the saved files don't have same name
 
 eval(parse(text=paste0("save(mhx, file='", rsav, "')")))
