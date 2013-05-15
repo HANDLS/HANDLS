@@ -1,5 +1,6 @@
 # ***folder name for saved files [include terminal slash]...
 rsav = 'location for saved files'	#e.g., rsav = '/hnd/rsav/'
+rsav = '/prj/hnd/Wave03/znlz/MedHx/Rsave/'
 
 library(Hmisc)
 
@@ -51,6 +52,5 @@ mhx = mhx[,c(1,zNamesRange(mhx, 'MedHxAllergyDrugs', 'MedHxAllergySkin'))]
 
 describe(mhx)
 
-#*********************** rename dataframe so all the saved files don't have same name
-
-eval(parse(text=paste0("save(mhx, file='", rsav, "')")))
+eval(parse(text=paste0(dfn, '=mhx')))
+eval(parse(text=paste0("save(", dfn, ", file='", rsav, dfn, ".rdata')")))
