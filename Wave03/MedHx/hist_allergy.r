@@ -1,6 +1,7 @@
 # ***folder name for saved files [include terminal slash]...
 rsav = 'location for saved files'	#e.g., rsav = '/hnd/rsav/'
-rsav = '/prj/hnd/Wave03/znlz/MedHx/Rsave/'
+#rsav = '/prj/hnd/Wave03/znlz/MedHx/Rsave/'
+rsav = 'C:/Users/Elias/Documents/work/NIA/2013/HANDLS/Wave03/MedHx/Rsave/'
 
 library(Hmisc)
 
