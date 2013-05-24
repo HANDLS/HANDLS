@@ -30,7 +30,7 @@ isMhx = function(dat) {
 
 bothLegsMhx = function(dat) {
 #	input: 1=1, 2=2, 7=DK, 8=Refused
-#	output: 0=No, 1=Yes, (7,8,9)=NA
+#	output: 1=One, 2=Both, (7,8,9)=NA
 	
 	dat = ifelse(is.na(dat), 9, dat)
 	dat = ifelse(dat<7, dat, NA)
@@ -93,18 +93,18 @@ mhx = within(mhx, {
 	})
 
 mhx = within(mhx, {
-	label(MedHxCHFWalkFar)		= 'MedHx-CHF: How far can you walk?'
-	label(MedHxCHFWalkPressure)	= 'MedHx-CHF: Ever stop walking due to chest pain/pressure?'
-	label(MedHxCHFWalkBreath)	= 'MedHx-CHF: Do you wake up in the middle of the night short of breath?'
-	label(MedHxCHFWalkCalves)	= 'MedHx-CHF: Ever stop walking due to pain/cramps in back of calves?'
-	label(MedHxCHFWalkKnees)	= 'MedHx-CHF: Ever stop walking due to pain in knee/hip/back?'
-	label(MedHxCHFWakeBreath)	= 'MedHx-CHF: Do you wake up in the middle of the night short of breath?'
-	label(MedHxCHFPillows)		= 'MedHx-CHF: Since your last visit, have you had to sleep on more than 2 pillows to avoid breathing difficulty?'
-	label(MedHxCHFLegsSwell)	= 'MedHx-CHF: Since your last visit, have you had swelling in your legs and ankles (not during pregnancy)?'
-	label(MedHxCHFLegsWhich)	= 'MedHx-CHF: Was swelling in one (1) or both (2) legs?'
-	label(MedHxCHFPassOut)		= 'MedHx-CHF: Since your last visit, have you passed out or blacked out?'
-	label(MedHxPassOutDoctor)	= 'MedHx-CHF: Did you see a doctor?'
-	label(MedHxPassOutDocSaid)	= 'MedHx-CHF: What did the doctor say?'
+	label(MedHxCHFWalkFar)		= 'MedHx-CV: How far can you walk'
+	label(MedHxCHFWalkPressure)	= 'MedHx-CV: Stop walking due to chest pain/pressure?'
+	label(MedHxCHFWalkBreath)	= 'MedHx-CV: Stop walking due to shortness of breath'
+	label(MedHxCHFWalkCalves)	= 'MedHx-CV: Ever stop walking due to pain/cramps in back of calves'
+	label(MedHxCHFWalkKnees)	= 'MedHx-CV: Ever stop walking due to pain in knee/hip/back'
+	label(MedHxCHFWakeBreath)	= 'MedHx-CV: Wake up in middle of night short of breath'
+	label(MedHxCHFPillows)		= 'MedHx-CV: Ever needed 2 or more pillows to avoid breathing problems'
+	label(MedHxCHFLegsSwell)	= 'MedHx-CV: Ever had swelling in legs/ankles (excl. pregnancy)'
+	label(MedHxCHFLegsWhich)	= 'MedHx-CV: Was swelling in one (1) or both (2) legs'
+	label(MedHxCHFPassOut)		= 'MedHx-CV: Ever passed out/blacked out'
+	label(MedHxPassOutDoctor)	= 'MedHx-CV: Went to doctor because passed out'
+	label(MedHxPassOutDocSaid)	= 'MedHx-CV: What did doctor say about passing out'
 	})
 
 mhx = mhx[,c(1,zNamesRange(mhx, 'MedHxCHFWalkFar', 'MedHxPassOutDocSaid'))]
