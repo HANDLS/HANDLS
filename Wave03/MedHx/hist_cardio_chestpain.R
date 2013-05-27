@@ -40,17 +40,19 @@ dateMhx = function(dat) {
 
 howLongMhx = function(dat) {
 
-#	input: "character"=character, 7=DK, 8=Refused
-#	output: level=character, (7,8,9)=NA
+#	input: 'Seconds', 'Less than 1 minute', '1 - 5 minutes', '6 - 15 minutes', '16 - 30 minutes',
+#			'31 minutes - 2 hours', 'More than 2 hours', 7=DK, 8=Refused
+#	output: 0='Seconds', 1='Less than 1 minute', 2='1 - 5 minutes', 3='6 - 15 minutes', 4='16 - 30 minutes',
+#			5='31 minutes - 2 hours', 6='More than 2 hours', (7,8,9)=NA
 
 	dat = ifelse(is.na(dat), 9, dat)
-	dat = ifelse(dat=="Seconds", 0, dat)
-	dat = ifelse(dat=="Less than 1 minute", 1, dat)
-	dat = ifelse(dat=="1 - 5 minutes", 2, dat)
-	dat = ifelse(dat=="6 - 15 minutes", 3, dat)
-	dat = ifelse(dat=="16 - 30 minutes", 4, dat)
-	dat = ifelse(dat=="31 minutes - 2 hours", 5, dat)
-	dat = ifelse(dat=="More than 2 hours", 6, dat)
+	dat = ifelse(dat=='Seconds', 0, dat)
+	dat = ifelse(dat=='Less than 1 minute', 1, dat)
+	dat = ifelse(dat=='1 - 5 minutes', 2, dat)
+	dat = ifelse(dat=='6 - 15 minutes', 3, dat)
+	dat = ifelse(dat=='16 - 30 minutes', 4, dat)
+	dat = ifelse(dat=='31 minutes - 2 hours', 5, dat)
+	dat = ifelse(dat=='More than 2 hours', 6, dat)
 	dat = ifelse(dat<7, dat, NA)
 	
 	dat = factor(dat, levels=0:6, labels=c('Seconds','Less than 1 minute','1 - 5 minutes','6 - 15 minutes',
@@ -60,14 +62,14 @@ howLongMhx = function(dat) {
 
 painsGoMhx = function(dat) {
 
-#	input: "No"=No, "Sometimes"=Sometimes, "Usually"=Usually, "Dont Know"=DK, 7=DK, 8=Refused
-#	output: 0=No, 1=Sometimes, 2=Usually, ("Dont Know",7,8,9)=NA
+#	input: 'No', 'Sometimes', 'Usually', 'Dont Know'=DK, 7=DK, 8=Refused
+#	output: 0='No', 1='Sometimes', 2='Usually', ('Dont Know',7,8,9)=NA
 
 	dat = ifelse(is.na(dat), 9, dat)
-	dat = ifelse(dat=="No", 0, dat)
-	dat = ifelse(dat=="Sometimes", 1, dat)
-	dat = ifelse(dat=="Usually", 2, dat)
-	dat = ifelse(dat=="Dont Know", 7, dat)
+	dat = ifelse(dat=='No', 0, dat)
+	dat = ifelse(dat=='Sometimes', 1, dat)
+	dat = ifelse(dat=='Usually', 2, dat)
+	dat = ifelse(dat=='Dont Know', 7, dat)
 	dat = ifelse(dat<7, dat, NA)
 
 	dat = factor(dat, levels=0:2, labels=c('No','Sometimes','Usually'))
@@ -76,13 +78,13 @@ painsGoMhx = function(dat) {
 
 DoctorSayMhx = function(dat) {
 
-#	input: "Heart Attack"=Heart Attack, "Angina"=Angina, "Pain was not from heart"=Pain was not from heart, 7=DK, 8=Refused
-#	output: 0=Heart Attack, 1=Angina, 2=Pain was not from heart, (7,8,9)=NA
+#	input: 'Heart Attack', 'Angina', 'Pain was not from heart', 7=DK, 8=Refused
+#	output: 0='Heart Attack', 1='Angina', 2='Pain was not from heart', (7,8,9)=NA
 
 	dat = ifelse(is.na(dat), 9, dat)
-	dat = ifelse(dat=="Heart Attack", 0, dat)
-	dat = ifelse(dat=="Angina", 1, dat)
-	dat = ifelse(dat=="Pain was not from heart", 2, dat)
+	dat = ifelse(dat=='Heart Attack', 0, dat)
+	dat = ifelse(dat=='Angina', 1, dat)
+	dat = ifelse(dat=='Pain was not from heart', 2, dat)
 	dat = ifelse(dat<7, dat, NA)
 
 	dat = factor(dat, levels=0:2, labels=c('Heart Attack','Angina','Pain was not from heart'))
