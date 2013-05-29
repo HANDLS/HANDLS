@@ -103,11 +103,11 @@ mhx = within(mhx, {
 	})
 
 mhx = within(mhx, {
-	label(MedHxChewEver)		= 'MedHx-Tobacco-Chew: Have you used chewing tobacco/snuff?'
-	label(MedHxChewAgeStart)	= 'MedHx-Tobacco-Chew: How old were you when you first started using chewing tobacco/snuff fairly regularly?'
-	label(MedHxChewNow)		= 'MedHx-Tobacco-Chew: Do you use chewing tobacco/snuff now?'
+	label(MedHxChewEver)		= 'MedHx-Tobacco-Chew: Have you used chew/snuff?'
+	label(MedHxChewAgeStart)	= 'MedHx-Tobacco-Chew: How old were you when you first started using chew/snuff regularly?'
+	label(MedHxChewNow)		= 'MedHx-Tobacco-Chew: Do you use chew/snuff now?'
 	label(MedHxChewSnuffNow)	= 'MedHx-Tobacco-Chew: Which do you use now - chewing tobacco or snuff?'
-	label(MedHxChewPerWeekNow)	= 'MedHx-Tobacco-Chew: How many containers of chewing tobacco/snuff do you use per week now?'
+	label(MedHxChewPerWeekNow)	= 'MedHx-Tobacco-Chew: How many containers of chew/snuff do you use per week now?'
 	label(MedHxChewSide)		= 'MedHx-Tobacco-Chew: On which side of your mouth do you use chew/snuff?'
 	label(MedHxChewTopBottom)	= 'MedHx-Tobacco-Chew: Do you use chew/snuff on the top or bottom of your mouth?'
 	})
