@@ -211,12 +211,11 @@ I also created a small package of useful utility routines called BES.
 I'm sharing them with you because I use these functions all the time.
 It's easier to share the functions than it is to rewrite all my code.
 
-Install BES in R by issuing these commands:
+Install the *BES* package by downloading the file from [BES archive](https://github.com/HANDLS/HANDLS/tree/HNDlocal/R/pkg)
+and issuing this *install.package* command:
 
 ```
-install.packages('devtools')
-library(devtools)
-install_url('http://handls.nih.gov/zBES/BES_0.01.tar.gz')
+install.packages('BES_0.01.tar.gz', repos=NULL, type='source')
 ```
 
 ### Appendix II - Resources
