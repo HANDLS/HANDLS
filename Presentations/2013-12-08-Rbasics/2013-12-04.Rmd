@@ -1,0 +1,363 @@
+```{r nlz, echo=F}
+zKnit('/key/LPS/2013-12-04-R-Basics/test/fig-', '/key/LPS/2013-12-04-R-Basics/test/cache-')
+options(digits=10, width=132, xtable.type = 'html')
+opts_chunk$set(comment=NA, tidy=F, prompt=T, echo=T)
+#
+# pandoc -s -S -i -t dzslides --mathjax index.md
+# pandoc -s -S -t dzslides --mathjax index.md
+# pandoc -s example.md -t latex -o example.pdf
+# pandoc -s -S -t dzslides --css test.css --mathjax test.md -o test.htm
+# pandoc -s -S -t slidy --mathjax test.md -o test.htm
+```
+
+# Some R basics
+
+# General considerations
+
+R takes a programmer's perspective &ndash; makes if difficult for
+
+- all-GUI users
+- users unfamiliar with
+	- command lines
+	- file structures
+	- text editors
+	- various file formats & translators
+	- initialization files (sometimes invisible)
+	- operating system locations & conventions
+
+# In this presentation
+
+Focus on
+
+- functional aspect of language
+- learn enough to do simple data manipulation & analyses
+
+Some hints
+
+- help is available in R by typing a question mark in front of a function name (e.g., **?summary**)
+- typing the name of an object prints the contents of the object
+- RStudio may make it easier (particularly as a way to step through a script by executing each line
+
+# Getting data into R
+
+Lots of ways.
+We'll mostly use two of them:
+
+- .csv
+	- comma-separated values in a text file
+	- can create manually or export from a spreadsheet
+	- input into R with **read.csv()** function
+
+- .rdata
+	- R data file (binary) generally created by R
+	- contains all of the variable names, label definitions
+	- input into R with **load()** function
+
+# .csv file
+
+Generally looks like
+
+```
+column1,column2,column3
+1,2,3
+2,3,4
+3,4,5
+```
+
+If these values are in a file called *data/demo1.csv* then you get these data into R by:
+
+```{r}
+csvdata = read.csv('data/demo1.csv', stringsAsFactor=FALSE)
+csvdata
+```
+
+# .rdata file
+
+.rdata files are created by the **save()** function<br>(e.g., **save(csvdata, file='data/demo1.rdata')**)
+
+If we had saved **csvdata** in *data/demo1.rdata* then we can get it into R by:
+
+```{r}
+load('data/demo1.rdata')
+csvdata
+```
+
+# Data in R
+
+Data in R are represented in various ways.
+
+Rather than dwelling on all the forms, for now it is sufficient to think of data in a table of values where the rows are the individuals who were measured and the columns are the names of the measures.
+
+In R this is called a *data frame*.
+
+We can make this concrete with some actual data loaded from the HANDLS website:
+
+```{r}
+(load(url('http://handls.nih.gov/zrdata/w00Demographics.rdata')))
+```
+
+The function is in parenthesis so that it prints the function's output (the name of the data frame is the output of the **load** function).
+
+# What's in the data frame (head)
+
+**head()** prints the first few lines of data.
+
+```{r}
+head(w00Dem)
+```
+Each row (line) is a HANDLS participant in this example.
+The columns are characteristics of the participants (e.g., Age0: initial age; Race, etc).
+
+# What's in the data frame (tail)
+
+**tail()** prints the last few lines of data.
+
+```{r}
+tail(w00Dem)
+```
+
+Both **head** & **tail** print 5 lines by default.
+
+If want want more or less then include **n=#** where # is the number of lines you want to print (e.g., **tail(w00Dem, n=10)** to print the last 10 lines.
+
+# Descriptive statistics
+
+The **summary()** is used for created a variety of reports.
+At its most basic, **summary(dataframe)** provides basic statistics (but not *n*).
+
+```{r}
+summary(w00Dem)
+```
+
+# Descriptive statistics (continued)
+
+The summary provided by the **summary()** function is not very satisfying.
+
+An alternative is the **describe()** function from the *Hmisc* package (neither installed nor loaded by default).
+
+```{r}
+library(Hmisc)
+describe(w00Dem[,c('Age0','Sex')])
+```
+
+*Hmisc* is an example of a package, a collection of user defined functions available from CRAN, a public archive a R packages.
+
+# Descriptive statistics (continued again)
+
+Another descriptive display is available in the **psych** package, which has a variety of other functions useful for psychometrics
+(e.g., component analysis with rotations such as varimax and promax, alpha internal consistency, path diagrams).
+
+```{r}
+library(psych)
+describe(w00Dem[,3:8])	#remove 1st and 2nd columns (HNDid & DOB) because HNDid isn't meaningful and DOB chokes this function
+```
+
+# Merging data frames
+
+- Often data are derived from separate sources and are stored in separate data frames.
+- For example, initial demographics are separate from cogntive test scores.
+- This prevents duplicating the same information every time we create data.
+- Combining data from two separate sources requires a key variable that identifies each line of data
+- Generally, we use the HANDLS ID
+
+# Merging (continued)
+
+Merge wave 1 neuropsych data with demographics selecting just age, sex, Benton total errors, & Trails B seconds.
+
+```{r}
+(load(url('http://handls.nih.gov/zrdata/w01Neupsy.rdata')))
+w01 = merge(w00Dem[,c('HNDid','Age0','Sex')], w01Neupsy[,c('HNDid','BVRtot','TrailsBtestSec')], 'HNDid')
+summary(w01)
+```
+
+# Selected subsets from a data frame
+
+Separate elements of a data frame are identified as row and column locations.
+
+Rows are identified by
+
+- row numbers
+- row name
+- logical selectors
+
+Columns are identified by
+
+- column numbers
+- column name (variable name)
+
+# Selecting specific rows
+
+Let's say that we want to summarize just the cognitive data for women.
+
+We can do this with the summary command on the merged data frame *w01*.
+
+We find just the women with the logical expression **w01$Sex=='Women'**.
+
+We use this expression in the summary function (or anywhere else) by enclosing it in a **which()** function (the reasons are a bit obscure but are related to what R does when there are missing data).
+
+```{r}
+summary(w01[which(w01$Sex=='Women'),])
+```
+
+# Correlations
+
+Calculate a correlation matrix.
+In the base R package,
+
+```{r}
+cor(w01[,c('Age0','BVRtot','TrailsBtestSec')])
+```
+
+doesn't seem useful when there are missing data.
+
+# Correlations on missing data (pairwise deletion)
+
+**zCor** from my package *zStat* isn't tripped up by missing data:
+
+```{r}
+library(zStat)
+zCor(w01[,c('Age0','BVRtot','TrailsBtestSec')])
+```
+
+# Descriptive statistics (again)
+
+While we're using *zStat*, you might try:
+
+```{r}
+library(zStat)
+zDesc(w01)
+```
+
+# Descriptive statistics breakdown by group
+
+```{r}
+library(doBy)
+library(zStat)
+summaryBy(BVRtot ~ Sex, w01, FUN=zByFUN)
+summaryBy(TrailsBtestSec ~ Sex, w01, FUN=zByFUN)
+```
+
+# Linear regression
+
+Although R has routines for t tests (**t.test**), oneway ANOVA (**oneway** in the *lattice* package), and ANOVA (**aov**),
+we tend to use general linear model formulations most frequently.
+
+Note the **aov** secretly performs regression and displays the results as a tradional ANOVA table.
+
+A simple multiple regression is done with **lm** &ndash; to regress age, sex, and age × sex on Benton total score:
+
+```{r}
+(mod.result1 = lm(BVRtot~Age0*Sex, w01))
+```
+
+# Linear regression summary
+
+A more interpretable display is available by applying the summary function to the object holding the linear regression results (**mod.results1**).
+
+```{r}
+summary(mod.result1)
+```
+
+# Linear regression (just main effects)
+
+For just main effects:
+
+```{r}
+mod.result2 = lm(BVRtot~Age0+Sex, w01)
+summary(mod.result2)
+```
+
+# Comparing models
+
+Although not entirely useful here, we can compare the two linear models to determine whether the interaction term adds useful information.
+This command is general in that it will compare models from other types of regression (e.g., nonlinear, mixed-model).
+
+```{r}
+anova(mod.result1, mod.result2)
+```
+Note that in this simple case the probablility for the difference between the two models (0.477) is the same as the probability of t in the regression analysis).
+
+# Categories
+
+Most variables in R are numeric on a continuous scale (e.g., height).
+
+- Generally, this includes counts even though frequencies are integers.
+- However, other measures are truly categories (e.g., sex) or categories we create for convenience (e.g., median splits).
+
+In R, these variables are called **factors**.
+
+- Factors are an enormous shorthand.
+- R deals with factors appropriately in analyses (e.g., creates suitable dummy coding in regressions).
+- But factors are also inconvenient because they do not naturally combine with numeric data (only an example can make this clear).
+
+# Creating factors
+
+In our example data, age is a continous variable with a (more or less) rectangular distribution per the HANDLS sampling design.
+
+```{r hist1,fig.height=5,fig.width=5}
+hist(w01$Age0, main='Frequency histogram for baseline age')
+```
+
+```{r echo=F}
+# edit html -- remove alt & paragraph, add: height='500', width='500'
+```
+
+# Factors (continued)
+
+Imagine that we have some reason to believe that there are meaningful differences in Benton errors among three age groups, 30-39, 40-49, & 50-64).
+
+We can create these categories in several ways, perhaps the most elegant of which is
+
+```{r}
+w01$age.grp = factor((w01$Age0>=30) + (w01$Age0>=40) + (w01$Age0>=50), levels=1:3, labels=c('30-39', '40-49', '50-64'))
+summaryBy(Age0~age.grp, w01, FUN=zByFUN)
+```
+
+# Regression models with factors as predictors
+
+Let's see if we were right about age differences in Benton performance.
+
+We might also suspect that age interacts with sex.
+
+---
+
+```{r}
+summary(lm(BVRtot ~ age.grp*Sex, w01))
+```
+
+Were we right?
+
+# Default contrasts
+
+By default, R uses the first level as the reference (e.g., 40-49 *v.* 30-39, 50-64 *v.* 30-39).
+
+Like most things, there are ways to change this behavior, including the contrast coding (e.g., effect instead of dummy coding).
+
+# What we did and what we didn't
+
+This presentation provides some of the basics but didn't touch on lots of other things
+
+- Logical operators, particularly how to select specific rows and variables
+- Presented how to create a factor but not how to convert a factor into a numeric variable
+- Manipulating variable names and labels
+- Installing packages
+- Writing functions
+
+# Assignment symbols & other (quirky) details
+
+- Use "<-" or "="?
+- R is case-sensitive
+- Though I don't use all of their suggestions, many coders use [Google's R style guide](http://google-styleguide.googlecode.com/svn/trunk/google-r-style.html#assignment)
+- R has no line terminator (e.g., ';' is not required at the end of a line)
+- Except for a very small number of exceptions, "commands" in R are functions
+	- The significance of this is hard to see at first glance
+	- The most important aspect of this "feature" is that every function that produces output can also store its output in an object
+	- This means that the results of even the most basic functions can be manipulated or output in ways that suit us
+	- Functions are used in complicated expressions (e.g., **summary(lm(...)**) in the last slide)
+
+# Some conveniences
+
+- Can define working environment (.Rprofile)
+	- load packages (e.g., Hmisc) automatically
+	- define options (line width, prompts, etc)
+	- works in *R* & *RStudio*

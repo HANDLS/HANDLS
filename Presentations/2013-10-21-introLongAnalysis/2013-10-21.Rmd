@@ -1,0 +1,233 @@
+```{r zKnit, echo=F}
+zKnit('/key/BES/2013-10-21-mixedDemo/zKnit/2013-10-22', '/key/BES/2013-10-21-mixedDemo/zKnit/2013-10-22')
+```
+
+This is a brief introduction to performing longitudinal analyses with R.
+The method is described in various sources, perhaps the most approachable is Singer & Willett (2003) from which the first example was derived.
+
+If you haven't installed packages then see Appendix I (below).
+To use these examples you will need to install my BES package and several packages from CRAN.
+If your `library` statements fail with a "no such package" error then you should try to install the package.
+
+There are two packages in R with which you can perform mixed model analyses,  the `lme` function from the *nlme* package or the `lmer` function with the *lme4* package.
+`lme4` is generally preferred because it's presently under active development and tends to be faster.
+However, for various pedagogical reasons ([Bates: lmer, p-values and all that](https://stat.ethz.ch/pipermail/r-help/2006-May/094765.html)), `lmer` does not report degrees of freedom or p-values for fixed effects (though as you'll see below there's a way around this).
+
+### Simple example from Singer & Willett
+
+All of the examples in Singer & Willett are coded in Mplus, MLwiN, HLM, SAS, Stata, R, and SPSS at [UCLA](http://www.ats.ucla.edu/stat/r/examples/alda/).
+
+I'll reproduce an example from Chapter 5 (*Treating time more flexibly*) where they examine changes in CES-D by employment status (model C, p 166ff).
+
+They use *nlme*, but I prefer *lme4*.
+
+```{r ALDA1, echo=T}
+library(lme4)
+unemployment <- read.table("http://www.ats.ucla.edu/stat/r/examples/alda/data/unemployment_pp.txt", header=T, sep=",")
+
+mer = lmer(cesd ~ months * unemp + (months|id), data=unemployment, REML=F)
+
+summary(mer)
+```
+
+Part of the convenience of using R is that model coefficients are readily accessible and can be used to generate plots.
+
+Singer & Willett illustrate a brute force method for plotting the results (brute force in the sense that you need to recode the plotting commands if the model changes -- later I'll show a different method that's less sensitive to model alterations).
+
+```{r ALDA1plot, echo=T, h=5, w=5}
+months.seq <- seq(0, 14)
+fixef.c <- fixef(mer)
+unemp.c1 <- fixef.c[[1]] + fixef.c[[2]]*months.seq + fixef.c[[3]] +
+            fixef.c[[4]]*months.seq
+unemp.c0 <- fixef.c[[1]] + fixef.c[[2]]*months.seq
+
+plot(months.seq, unemp.c1, type="l", ylim=c(5, 20), ylab="CES-D.hat",
+     xlab="Months since job loss")
+lines(months.seq, unemp.c0, lty=3)
+legend(7, 20, c("Unemp = 1", "Unemp = 0"), lty=c(1, 3))
+title("Interaction Between Unemp and Time")
+```
+For simple models we can generally "see" the effects and the directions of association.
+For more complex model, particularly with higher order interactions (especially with time), we've found that plotting the "predicted" values is the only way to visualize the effects.
+
+### An example from BLSA
+
+These data are from repeated administrations of the CVLT.
+We'll look at changes over time (linear and quadratic) and differences in rates of change between women and men.
+BLSA does not code sex explicitly because men have ID<5000.
+
+In this analysis I centered age at 65 and coded explicitly for the quadratic term (unnecessary but easier to comprehend).
+
+```{r CVL1, h=5, w=5, echo=T}
+(load(url('http://handls.nih.gov/zBES/2013-10-21-mixedDemo1.rdata')))
+
+cvl$Sex = (cvl$BLSid<5000)
+cvl$Sex = factor(cvl$Sex, labels=zQ(Women,Men))
+cvl$Age = cvl$Age - 65
+cvl$AgeSq = cvl$Age**2
+table(cvl$Sex)
+
+library("lme4")
+
+mer = lmer(CVLtca ~ (Age+AgeSq)*Sex + (Age|BLSid), data=cvl, na.action=na.omit)
+
+summary(mer)
+
+b = fixef(mer)
+
+pAge = seq(50, 90)
+xAge = pAge - 65
+xAgeSq = xAge**2
+
+pW = b[1] + b[2]*xAge + b[3]*xAgeSq
+pM = b[1] + b[2]*xAge + b[3]*xAgeSq + b[4] + b[5]*xAge + b[6]*xAgeSq
+
+plot(pAge, pM, type="l", col="blue", ylim=c(25,65), ylab="CVLtca", xlab="Age")
+lines(pAge, pW, lty=1, col="red")
+legend(75, 65, zQ(Women,Men), lty=c(1,1), col=zQ(red,blue))
+```
+
+This method is also "brute force."
+The code below yields the same plot using *zMixHat*, a utility function included in the BES package.
+I also illustrate a few other commands that make the code a little more accessible and the plot a little prettier.
+
+```{r CVL2, h=5, w=5, echo=T}
+library(BES)
+
+pAge = seq(50, 90)
+xAge = pAge - 65
+xAgeSq = xAge**2
+
+cvlHatCI = zMixHat(cvl, mer, vary="Age=xAge, Sex=zQ(Women,Men)", derivCov="AgeSq=Age**2")
+head(cvlHatCI)
+
+par(las=1, lwd=2)
+with(cvlHatCI[cvlHatCI$Sex=="Men",],   plot (pAge, hat, type="l", col="blue", ylim=c(25,65), ylab="CVLtca", xlab="Age"))
+with(cvlHatCI[cvlHatCI$Sex=="Women",], lines(pAge, hat, lty=1, col="red"))
+
+legend(75, 65, zQ(Women,Men), lty=c(1,1), col=zQ(red,blue))
+```
+### HANDLS example
+
+Perhaps more relevant but with only one repeated measure we also have longitudinal data in HANDLS.
+In this example I examine change over approximately 5 years by poverty status, race, and sex for BVR total errors.
+I'll start with a complete model including the (dreaded) 4-way interaction.
+I also apply the `cftest` function from the *multcomp* package to generate t-tests and p-values for the fixed effects.
+
+```{r HNDbvr1, echo=T}
+library(lme4)
+library(multcomp)
+library(zStat)
+(load(url('http://handls.nih.gov/zBES/2013-10-22-mixedDemo2.rdata')))
+describe(BVR)
+merBVR1 = lmer(BVRtot ~ PovStat * Race * Sex * Age + (Age|HNDid), data=BVR, na.action=na.omit)
+summary(merBVR1)
+cftest(merBVR1)
+```
+
+Using backward elimination we can remove the 4-way interaction because it was nonsignificant.
+Here's a convenient syntactical trick for specifying all of the interactions up to a specific number of terms (note pluses within parentheses and the \^3 indicates the maximum "ways").
+
+```{r HNDbvr2, echo=T, h=7, w=7}
+merBVR2 = lmer(BVRtot ~ (PovStat + Race + Sex + Age)^3 + (Age|HNDid), data=BVR, na.action=na.omit)
+
+summary(merBVR2)
+cftest(merBVR2)
+```
+
+Now this is getting a little more interesting.
+It's nearly impossible to get a feel for the direction and magnitude of the effects because the coefficients are not independent (uncorrelated).
+Plotting the predicted values by group is an easy way to grasp the overall directions and type of interactions.
+
+```{r HNDbvr3, echo=T, h=7, w=7}
+pAge = seq(30, 70)
+
+hatBVR1 = zMixHat(BVR, merBVR2, vary="Age=pAge, PovStat=zQ(abovePovStat,belowPovStat),Race=zQ(White,AfrAm),Sex=zQ(Women,Men)")
+
+par(las=1, lwd=2)
+
+HNDcolors = HNDpltColors()
+
+with(hatBVR1[hatBVR1$Sex=="Women" & hatBVR1$PovStat=='abovePovStat' & hatBVR1$Race=='White',],
+	plot (pAge, hat, lty=1, col="red", typ='l', ylim=c(0,14), ylab='BVR', xlab='Age'))
+with(hatBVR1[hatBVR1$Sex=="Women" & hatBVR1$PovStat=='abovePovStat' & hatBVR1$Race=='AfrAm',],
+	lines(pAge, hat, lty=2, col="red"))
+with(hatBVR1[hatBVR1$Sex=="Women" & hatBVR1$PovStat=='belowPovStat' & hatBVR1$Race=='White',],
+	lines(pAge, hat, lty=3, col="red"))
+with(hatBVR1[hatBVR1$Sex=="Women" & hatBVR1$PovStat=='belowPovStat' & hatBVR1$Race=='AfrAm',],
+	lines(pAge, hat, lty=4, col="red"))
+
+with(hatBVR1[hatBVR1$Sex=="Men"   & hatBVR1$PovStat=='abovePovStat' & hatBVR1$Race=='White',],
+	lines(pAge, hat, lty=1, col="blue", typ='l', ylim=c(0,14), ylab='BVR', xlab='Age'))
+with(hatBVR1[hatBVR1$Sex=="Men"   & hatBVR1$PovStat=='abovePovStat' & hatBVR1$Race=='AfrAm',],
+	lines(pAge, hat, lty=2, col="blue"))
+with(hatBVR1[hatBVR1$Sex=="Men"   & hatBVR1$PovStat=='belowPovStat' & hatBVR1$Race=='White',],
+	lines(pAge, hat, lty=3, col="blue"))
+with(hatBVR1[hatBVR1$Sex=="Men"   & hatBVR1$PovStat=='belowPovStat' & hatBVR1$Race=='AfrAm',],
+	lines(pAge, hat, lty=4, col="blue"))
+
+legend(30, 14, zQ(abovePovWhite,abovePovAfrAm,belowPovWhite,belowPovAfrAm), lty=1:4, col='black')
+text  (30, 10, 'Women in red', adj=c(0,0), col='red')
+text  (30, 9.5, 'Men in blue',  adj=c(0,0), col='blue')
+```
+
+Although it's a little hard to discern, it appears as though differences associated with poverty status are larger than those associated with race differences.
+We can reanalyze and re-plot, or we can recalculate the predicted scores holding constant race (these aren't necessarily equivalent approaches).
+Just for illustration, I'll recalculate the predicted scores with `zMixHat` and re-plot.
+
+```{r HNDbvr4, echo=T, h=7, w=7}
+par(las=1, lwd=2)
+
+hatBVR2 = zMixHat(BVR, merBVR2, vary="Age=pAge, PovStat=zQ(abovePovStat,belowPovStat),Sex=zQ(Women,Men)", fixedCov='Race')
+
+with(hatBVR2[hatBVR2$Sex=="Women" & hatBVR2$PovStat=='abovePovStat',],
+	plot (pAge, hat, lty=1, col="red", typ='l', ylim=c(0,14), ylab='BVR', xlab='Age'))
+with(hatBVR2[hatBVR2$Sex=="Women" & hatBVR2$PovStat=='belowPovStat',],
+	lines(pAge, hat, lty=2, col="red"))
+with(hatBVR2[hatBVR2$Sex=="Men"   & hatBVR2$PovStat=='abovePovStat',],
+	lines(pAge, hat, lty=1, col="blue"))
+with(hatBVR2[hatBVR2$Sex=="Men"   & hatBVR2$PovStat=='belowPovStat',],
+	lines(pAge, hat, lty=2, col="blue"))
+
+legend(30, 14, zQ(abovePovWomen,belowPovWomen,abovePovMen,belowPovMen), lty=c(1,2), col=zQ(red,red,blue,blue))
+```
+
+This is a quick plot.
+I would probably clean up the legend if I were considering publishing it or using it in a more formal presentation
+
+### Appendix I - Install packages
+
+There is a large and growing larger library of packages in CRAN (http://cran.r-project.org/ -- Comprehensive R Archive Network) that you can install into R (select "packages" under *Software* on the left-hand menu).
+
+To install lme4, issue the command:
+
+`install.packages("lme4")`
+
+To use the package, issue the command:
+
+`library(lme4)`
+
+I also created a small package of useful utility routines called BES.
+I'm sharing them with you because I use these functions all the time.
+It's easier to share the functions than it is to rewrite all my code.
+
+Install BES in R by issuing these commands:
+
+```
+install.packages('devtools')
+library(devtools)
+install_url('http://handls.nih.gov/zBES/BES_0.01.tar.gz')
+```
+
+### Appendix II - Resources
+
+[Douglas Bates: lme4: Mixed-effects modeling with R](http://lme4.r-forge.r-project.org/lMMwR/lrgprt.pdf)
+
+[John Fox: Linear mixed models](http://cran.r-project.org/doc/contrib/Fox-Companion/appendix-mixed-models.pdf)
+
+[Mixed models FAQ](http://glmm.wikidot.com/faq)
+
+[Venables: Exegeses on Linear Models](http://www.stats.ox.ac.uk/pub/MASS3/Exegeses.pdf)
+
+### References
+Singer, J. D., & Willett, J. B. (2003). Applied Longitudinal Data Analysis: Modeling Change and Event Occurrence (1st ed.). Oxford University Press, USA.
