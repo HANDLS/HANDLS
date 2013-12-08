@@ -1,9 +1,0 @@
-To save at the end of the day:
-
-git add .
-git commit -m "This is what I did"
-git push
-
-To get started the next day:
-
-git pull
